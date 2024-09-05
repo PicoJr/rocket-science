@@ -93,16 +93,12 @@ function discovered_or_near_other_discovered(
     ? node_id_or_link_object.id
     : node_id_or_link_object;
   const node = graph.node_id_map.get(node_id);
-  if (node === undefined) {
-    return false;
-  } else {
-    return (
-      discovered.includes(node.id) ||
-      node.sources.find((id) => {
-        return discovered.includes(id);
-      }) !== undefined
-    );
-  }
+  return (node !== undefined) && (
+    discovered.includes(node.id) ||
+    node.sources.find((id) => {
+      return discovered.includes(id);
+    }) !== undefined
+  );
 }
 
 function App() {
