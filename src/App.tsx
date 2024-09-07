@@ -43,6 +43,8 @@ function App() {
 
   const nb_nodes = 100;
   const techgraph: TechGraph = random_techgraph(nb_nodes);
+  // const {useMemo} = React;
+  // const techgraph: TechGraph = useMemo( () => random_techgraph(nb_nodes), []);
 
   const gradient = new Gradient()
   .setGradient("#1fe049", "#1f80e0", "#801fe0", "#e0801f")
