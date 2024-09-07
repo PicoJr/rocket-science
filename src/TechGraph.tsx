@@ -1,5 +1,5 @@
 import { prepend } from "shades";
-import { geometricReservoirSample } from "pandemonium";
+import { createGeometricReservoirSample} from "pandemonium";
 
 type TechNodeId = number;
 
@@ -45,6 +45,9 @@ const tiers_from_id = (i: number, n: number) => {
 };
 
 function random_techgraph(n: number): TechGraph {
+  var seedrandom = require('seedrandom');
+  var seeded_rng = seedrandom("foo");
+  const sample_fn = createGeometricReservoirSample<number>(seeded_rng);
   const nodes_by_tier: Map<number, number[]> = new Map(
     tiers.map((t: number) => {
       return [
@@ -79,7 +82,7 @@ function random_techgraph(n: number): TechGraph {
       const source_tier = nodes_by_tier.get(t) || [];
       const target_tier = nodes_by_tier.get(t + 1) || [];
       source_tier?.forEach((i_source_tier: number) => {
-        const node_targets = geometricReservoirSample(2, target_tier);
+        const node_targets = sample_fn(2, target_tier as number & number[]);
         node_targets?.forEach((i_target_tier: number) => {
           // console.log("links: " + i_source_tier + " -> " + i_target_tier);
           techgraph.links.push({
