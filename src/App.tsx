@@ -7,80 +7,8 @@ import ForceGraph3D, {
   ForceGraphMethods,
 } from "react-force-graph-3d";
 import { filter, cons } from "shades";
+import { TechNodeId, TechNode, TechLink, TechGraph, random_techgraph } from "./TechGraph";
 
-type TechNodeId = number;
-
-type TechLink = {
-  source: TechNodeId;
-  target: TechNodeId;
-};
-
-type TechNode = {
-  id: TechNodeId;
-  sources: TechNodeId[];
-  targets: TechNodeId[];
-};
-
-type TechGraph = {
-  nodes: TechNode[];
-  links: TechLink[];
-  node_id_map: Map<TechNodeId, TechNode>;
-};
-
-function dummy_techgraph(): TechGraph {
-  var techgraph: TechGraph = {
-    nodes: [
-      {
-        id: 0,
-        sources: [],
-        targets: [],
-      },
-      {
-        id: 1,
-        sources: [],
-        targets: [],
-      },
-      {
-        id: 2,
-        sources: [],
-        targets: [],
-      },
-      {
-        id: 3,
-        sources: [],
-        targets: [],
-      },
-    ],
-    links: [
-      {
-        source: 0,
-        target: 1,
-      },
-      {
-        source: 1,
-        target: 2,
-      },
-      {
-        source: 2,
-        target: 3,
-      },
-    ],
-    node_id_map: new Map(),
-  };
-  // cross-link node objects
-  techgraph.links.forEach((link) => {
-    const a = techgraph.nodes[link.source];
-    const b = techgraph.nodes[link.target];
-    !a.targets && (a.targets = []);
-    !b.sources && (b.sources = []);
-    a.targets.push(b.id);
-    b.sources.push(a.id);
-  });
-  techgraph.nodes.forEach((node) => {
-    techgraph.node_id_map.set(node.id, node);
-  });
-  return techgraph;
-}
 
 function isLinkObject(
   link: TechNodeId | LinkObject<TechNode, TechLink>
@@ -118,7 +46,7 @@ function App() {
     return "red";
   };
 
-  const techgraph: TechGraph = dummy_techgraph();
+  const techgraph: TechGraph = random_techgraph(100);
 
   const FocusGraph = () => {
     const fgRef = useRef<ForceGraphMethods<TechNode, TechLink>>();
@@ -161,7 +89,6 @@ function App() {
               setDiscovered(cons(node.id)(discovered));
             }
           }
-          // console.log("node distance: " + node_distance);
         }
       },
       [fgRef]
