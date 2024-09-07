@@ -7,7 +7,9 @@ import ForceGraph3D, {
   ForceGraphMethods,
 } from "react-force-graph-3d";
 import { filter, cons } from "shades";
-import { TechNodeId, TechNode, TechLink, TechGraph, random_techgraph } from "./TechGraph";
+import { Gradient } from "typescript-color-gradient";
+
+import { TechNodeId, TechNode, TechLink, TechGraph, random_techgraph, tiers_from_id, nb_tiers } from "./TechGraph";
 
 
 function isLinkObject(
@@ -39,14 +41,27 @@ function App() {
   const [discovered, setDiscovered] = React.useState(initialy_discovered);
   const { useRef, useCallback } = React;
 
+  const nb_nodes = 100;
+  const techgraph: TechGraph = random_techgraph(nb_nodes);
+
+  const gradient = new Gradient()
+  .setGradient("#1fe049", "#1f80e0", "#801fe0", "#e0801f")
+  .setNumberOfColors(nb_tiers)
+  .getColors();
+
   const nodeColor = (node: TechNode) => {
     if (discovered.includes(node.id)) {
-      return "green";
+      return gradient.at(tiers_from_id(node.id, nb_nodes)) || "yellow";
     }
-    return "red";
+    return "#d8d8da";
   };
-
-  const techgraph: TechGraph = random_techgraph(100);
+  
+  const nodeSize = (node: TechNode) => {
+    if (discovered.includes(node.id)) {
+      return 8;
+    }
+    return 4;
+  };
 
   const FocusGraph = () => {
     const fgRef = useRef<ForceGraphMethods<TechNode, TechLink>>();
@@ -99,6 +114,7 @@ function App() {
         ref={fgRef}
         graphData={techgraph}
         nodeColor={(node) => nodeColor(node)}
+        nodeVal={(node) => nodeSize(node)}
         nodeLabel={(node) => String(node.id)}
         onNodeClick={(node, event) => handleClick(node, event)}
         nodeVisibility={(node) =>

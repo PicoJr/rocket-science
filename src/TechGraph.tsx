@@ -1,5 +1,5 @@
 import { prepend } from "shades";
-import {geometricReservoirSample} from 'pandemonium';
+import { geometricReservoirSample } from "pandemonium";
 
 type TechNodeId = number;
 
@@ -20,28 +20,36 @@ type TechGraph = {
   node_id_map: Map<TechNodeId, TechNode>;
 };
 
+const nodes_tier_proportions = [0.05, 0.1, 0.2, 0.3, 0.2, 0.1, 0.05];
+const tiers = nodes_tier_proportions.map((_, idx) => idx);
+const nb_tiers = tiers.length;
+const nodes_tier_proportions_cum_sum = prepend([0])(nodes_tier_proportions).map(
+  (
+    (sum) => (value) =>
+      (sum += value)
+  )(0)
+);
+
+const tiers_from_id = (i: number, n: number) => {
+  const tier = tiers.find((t) => {
+    return (
+      n * nodes_tier_proportions_cum_sum[t] <= i &&
+      i < n * nodes_tier_proportions_cum_sum[Math.min(t + 1, nb_tiers)]
+    );
+  });
+  if (tier !== undefined) {
+    return tier;
+  } else {
+    return nb_tiers - 1;
+  }
+};
+
 function random_techgraph(n: number): TechGraph {
-  const nodes_tier_proportions = [0.05, 0.10, 0.20, 0.30, 0.20, 0.10, 0.05];
-  const tiers = nodes_tier_proportions.map((_, idx) => idx);
-  const nb_tiers = tiers.length;
-  const nodes_tier_proportions_cum_sum = prepend([0])(nodes_tier_proportions).map((sum => value => sum += value)(0))
-
-  const tiers_from_id = (i: number) => {
-    const tier = tiers.find((t) => {
-      return n * nodes_tier_proportions_cum_sum[t] <= i && i < n * nodes_tier_proportions_cum_sum[Math.min(t+1, nb_tiers)];
-    });
-    if (tier !== undefined) {
-      return tier;
-    } else {
-      return nb_tiers - 1;
-    }
-  };
-
   const nodes_by_tier: Map<number, number[]> = new Map(
     tiers.map((t: number) => {
       return [
         t,
-        [...Array.from(Array(n).keys())].filter((i) => tiers_from_id(i) === t),
+        [...Array.from(Array(n).keys())].filter((i) => tiers_from_id(i, n) === t),
       ];
     })
   );
@@ -104,4 +112,6 @@ export {
   type TechLink,
   type TechGraph,
   random_techgraph,
+  tiers_from_id,
+  nb_tiers
 };
