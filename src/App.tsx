@@ -6,16 +6,29 @@ import ForceGraph3D, {
   NodeObject,
   ForceGraphMethods,
 } from "react-force-graph-3d";
-import { cons } from "shades";
+import { append, cons } from "shades";
 import { Gradient } from "typescript-color-gradient";
 
-import { TechNodeId, TechNode, TechLink, TechGraph, random_techgraph, tiers_from_id, nb_tiers } from "./TechGraph";
-
+import {
+  TechNodeId,
+  TechNode,
+  TechLink,
+  TechGraph,
+  random_techgraph,
+  tiers_from_id,
+  nb_tiers,
+} from "./TechGraph";
 
 function isLinkObject(
   link: TechNodeId | LinkObject<TechNode, TechLink>
 ): link is LinkObject<TechNode, TechLink> {
   return (link as LinkObject<TechNode, TechLink>).id !== undefined;
+}
+
+function isNodeObject(
+  node: TechNodeId | NodeObject<TechNode>
+): node is NodeObject<TechNode> {
+  return (node as NodeObject<TechNode>).id !== undefined;
 }
 
 function discovered_or_near_other_discovered(
@@ -41,13 +54,13 @@ function App() {
   const [discovered, setDiscovered] = React.useState(initialy_discovered);
   const { useRef, useCallback } = React;
 
-  const nb_nodes = 100;
+  const nb_nodes = 1000;
   // const techgraph: TechGraph = random_techgraph(nb_nodes);
 
   const gradient = new Gradient()
-  .setGradient("#1fe049", "#1f80e0", "#801fe0", "#e0801f")
-  .setNumberOfColors(nb_tiers)
-  .getColors();
+    .setGradient("#1fe049", "#1f80e0", "#801fe0", "#e0801f")
+    .setNumberOfColors(nb_tiers)
+    .getColors();
 
   const nodeColor = (node: TechNode) => {
     if (discovered.includes(node.id)) {
@@ -55,7 +68,7 @@ function App() {
     }
     return "#d8d8da";
   };
-  
+
   const nodeSize = (node: TechNode) => {
     if (discovered.includes(node.id)) {
       return 8;
@@ -66,8 +79,8 @@ function App() {
   const FocusGraph = () => {
     const fgRef = useRef<ForceGraphMethods<TechNode, TechLink>>();
 
-    const {useMemo} = React;
-    const techgraph: TechGraph = useMemo( () => random_techgraph(nb_nodes), []);
+    const { useMemo } = React;
+    const techgraph: TechGraph = useMemo(() => random_techgraph(nb_nodes), []);
 
     const handleClick = useCallback(
       (node: NodeObject<TechNode>, event: MouseEvent) => {
@@ -108,6 +121,39 @@ function App() {
       [fgRef]
     );
 
+    const initialy_highlighted: TechLink[] = [];
+    const [highlightLinks, setHighlightLinks] =
+      React.useState(initialy_highlighted);
+
+    const handleNodeHover = (node: NodeObject<TechNode> | null) => {
+      if (node) {
+        const links_from = node.targets.map((target) => ({
+          source: node.id,
+          target: target,
+        }));
+        const links_to = node.targets.map((source) => ({
+          source: source,
+          target: node.id,
+        }));
+        const new_links: TechLink[] = append(links_from)(links_to);
+        setHighlightLinks(new_links);
+      }
+    };
+
+    const linkWidth = (link: LinkObject<TechNode, TechLink>) => {
+      const source_id = isNodeObject(link.source)
+        ? link.source.id
+        : link.source;
+      const target_id = isNodeObject(link.target)
+        ? link.target.id
+        : link.target;
+      return highlightLinks.some(
+        (e) => e.source === source_id && e.target === target_id
+      )
+        ? 4
+        : 1;
+    };
+
     return (
       <ForceGraph3D
         ref={fgRef}
@@ -126,6 +172,8 @@ function App() {
             discovered
           )
         }
+        linkWidth={(link) => linkWidth(link)}
+        onNodeHover={handleNodeHover}
       />
     );
   };
