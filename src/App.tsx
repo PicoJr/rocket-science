@@ -6,7 +6,7 @@ import ForceGraph3D, {
   NodeObject,
   ForceGraphMethods,
 } from "react-force-graph-3d";
-import { filter, cons } from "shades";
+import { cons } from "shades";
 import { Gradient } from "typescript-color-gradient";
 
 import { TechNodeId, TechNode, TechLink, TechGraph, random_techgraph, tiers_from_id, nb_tiers } from "./TechGraph";
@@ -42,9 +42,7 @@ function App() {
   const { useRef, useCallback } = React;
 
   const nb_nodes = 100;
-  const techgraph: TechGraph = random_techgraph(nb_nodes);
-  // const {useMemo} = React;
-  // const techgraph: TechGraph = useMemo( () => random_techgraph(nb_nodes), []);
+  // const techgraph: TechGraph = random_techgraph(nb_nodes);
 
   const gradient = new Gradient()
   .setGradient("#1fe049", "#1f80e0", "#801fe0", "#e0801f")
@@ -67,6 +65,9 @@ function App() {
 
   const FocusGraph = () => {
     const fgRef = useRef<ForceGraphMethods<TechNode, TechLink>>();
+
+    const {useMemo} = React;
+    const techgraph: TechGraph = useMemo( () => random_techgraph(nb_nodes), []);
 
     const handleClick = useCallback(
       (node: NodeObject<TechNode>, event: MouseEvent) => {
@@ -98,11 +99,7 @@ function App() {
               500 // ms transition duration
             );
           } else {
-            if (discovered.includes(node.id)) {
-              setDiscovered(
-                filter((node_id) => node_id !== node.id)(discovered)
-              );
-            } else {
+            if (!discovered.includes(node.id)) {
               setDiscovered(cons(node.id)(discovered));
             }
           }
