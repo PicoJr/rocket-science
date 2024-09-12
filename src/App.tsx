@@ -18,6 +18,11 @@ import {
   tiers_from_id,
   nb_tiers,
 } from "./TechGraph";
+import { Map } from "immutable";
+
+function research_success_probability(p0: number, retries: number): number {
+  return p0 + (1 - p0) * (1 - 1 / Math.sqrt(1 + retries / 10)); 
+}
 
 function isLinkObject(
   link: TechNodeId | LinkObject<TechNode, TechLink>
@@ -52,9 +57,11 @@ function discovered_or_near_other_discovered(
 function App() {
   const initialy_discovered = [0];
   const [discovered, setDiscovered] = React.useState(initialy_discovered);
+  const [retries, setRetries] = React.useState(Map<TechNodeId, number>());
   const { useRef, useCallback } = React;
 
-  const nb_nodes = 1000;
+  const nb_nodes = 100;
+  const base_probability = 0.20;
   // const techgraph: TechGraph = random_techgraph(nb_nodes);
 
   const gradient = new Gradient()
@@ -113,7 +120,15 @@ function App() {
             );
           } else {
             if (!discovered.includes(node.id)) {
-              setDiscovered(cons(node.id)(discovered));
+              const r: number = retries.get(node.id) || 0;
+              const p0 = Math.pow(base_probability, tiers_from_id(node.id, nb_nodes));
+              const p = research_success_probability(p0, r);
+              const new_retries = retries.set(node.id, r + 1); 
+              if (Math.random() < p) {
+                setDiscovered(cons(node.id)(discovered));
+              } else {
+                setRetries(new_retries);
+              }
             }
           }
         }
@@ -160,7 +175,12 @@ function App() {
         graphData={techgraph}
         nodeColor={(node) => nodeColor(node)}
         nodeVal={(node) => nodeSize(node)}
-        nodeLabel={(node) => String(node.id)}
+        nodeLabel={(node) => {
+          const r: number = retries.get(node.id) || 0;
+          const p0 = Math.pow(base_probability, tiers_from_id(node.id, nb_nodes));
+          const p = research_success_probability(p0, r);
+          return String(p);
+        }}
         onNodeClick={(node, event) => handleClick(node, event)}
         nodeVisibility={(node) =>
           discovered_or_near_other_discovered(node.id, techgraph, discovered)
